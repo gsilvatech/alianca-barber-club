@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,6 +11,33 @@ const supabaseAdmin = createClient(
 export async function POST(request: Request) {
   try {
     const { userId, actionType } = await request.json();
+
+    if (
+      typeof userId !== "string" ||
+      !["whatsapp_link", "temporary_password"].includes(actionType)
+    ) {
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
+
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user: requestingUser },
+    } = await supabase.auth.getUser();
+
+    if (!requestingUser) {
+      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
+    const { data: requesterProfile, error: requesterError } =
+      await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", requestingUser.id)
+        .single();
+
+    if (requesterError || requesterProfile?.role !== "admin") {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
 
     // EXTRAI A ORIGEM (Pega http://localhost:3000 ou https://aliancabarberclub.com.br automaticamente)
     const origin = new URL(request.url).origin;

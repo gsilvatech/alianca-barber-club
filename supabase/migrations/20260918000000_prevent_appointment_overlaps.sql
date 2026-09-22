@@ -1,15 +1,9 @@
 begin;
 
--- Preserve the length that was in effect when each appointment was booked.
 alter table public.appointments
   add column if not exists duration_applied integer;
 
--- An existing trigger validates full-day blocks. It is correct for new
--- bookings, but it would prevent us from backfilling historical rows that
--- happen to fall on a subsequently blocked day.
 alter table public.appointments disable trigger user;
-
--- Backfill existing appointments from the service table whenever possible.
 update public.appointments as appointment
 set duration_applied = service.duration
 from public.services as service
@@ -25,14 +19,10 @@ where appointment.duration_applied is null
     end
   ));
 
--- A fragmented block occupies one 10-minute slot. Older unidentified records
--- receive a conservative 60-minute duration rather than creating a gap.
 update public.appointments
 set duration_applied = case when service like 'BLOQUEIO%' then 10 else 60 end
 where duration_applied is null;
 
--- Keeps the currently deployed app working during rollout. It does not send
--- duration_applied yet, so it receives a safe (more restrictive) default.
 alter table public.appointments
   alter column duration_applied set default 60;
 
@@ -46,8 +36,6 @@ alter table public.appointments
   add constraint appointments_duration_applied_positive
   check (duration_applied > 0);
 
--- The application blocks conflicting slots in the interface. This trigger is
--- the final protection, including when two customers try to book concurrently.
 create or replace function public.prevent_appointment_overlap()
 returns trigger
 language plpgsql
@@ -68,8 +56,6 @@ begin
     raise exception 'O barbeiro não atende nesta data.';
   end if;
 
-  -- Serializes reservations for the same barber and date, closing the race
-  -- between checking availability in the browser and inserting the booking.
   perform pg_advisory_xact_lock(
     hashtextextended(new.barber_id::text || ':' || new.date::text, 0)
   );
