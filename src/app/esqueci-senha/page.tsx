@@ -37,7 +37,7 @@ export default function EsqueciSenhaPage() {
       <div className="w-full max-w-sm flex flex-col justify-center">
         <div className="text-center mb-6">
           <img
-            src="/logo.png"
+            src="/logo aliança1.png"
             alt="Aliança Barber Club"
             className="h-32 w-auto mx-auto mix-blend-lighten"
           />

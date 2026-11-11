@@ -84,7 +84,7 @@ export default function CadastroPage() {
         {/* REDUZIDO: Logo otimizada para liberar espaço vertical */}
         <div className="text-center mb-4">
           <img
-            src="/logo.png"
+            src="/logo aliança1.png"
             alt="Aliança Barber Club"
             className="h-40 w-auto mx-auto mix-blend-lighten"
           />

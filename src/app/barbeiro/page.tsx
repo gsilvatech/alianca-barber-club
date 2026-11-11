@@ -38,6 +38,7 @@ import {
   MessageCircle,
   Phone,
   X,
+  MoreVertical,
 } from "lucide-react";
 
 // --- HELPER DE DATA LOCAL (CORRIGE O FUSO HORÁRIO DO BRASIL) ---
@@ -517,6 +518,21 @@ export default function BarbeiroPage() {
     date: string;
     time: string;
   } | null>(null);
+
+  // Menu de ações (hamburger) dos cards de agendamento do dia
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [menuUp, setMenuUp] = useState(false);
+
+  function toggleMenu(e: React.MouseEvent<HTMLButtonElement>, id: string) {
+    if (menuOpenId === id) {
+      setMenuOpenId(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    // Se não couber ~170px abaixo do botão, abre o menu para cima
+    setMenuUp(window.innerHeight - rect.bottom < 170);
+    setMenuOpenId(id);
+  }
 
   // Editar Plano
   const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false);
@@ -1543,9 +1559,9 @@ export default function BarbeiroPage() {
 
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <img
-              src="/logo.png"
+              src="/logo aliança1.png"
               alt="Aliança Barber Club"
-              className="h-11 w-auto mix-blend-lighten"
+              className="h-24 w-auto mix-blend-lighten"
             />
           </div>
 
@@ -1647,53 +1663,87 @@ export default function BarbeiroPage() {
                               )}
                             </div>
                           </div>
-                          {!isBlock &&
-                            !isCanceled &&
-                            !isNoShow &&
-                            !autoCompleted && (
-                              <div className="flex items-center gap-2 border-l border-zinc-800 pl-3">
-                                <button
-                                  onClick={() => openEditModal(a)}
-                                  className="text-zinc-500 hover:text-amber-400 p-1.5 transition-colors"
-                                >
-                                  <Edit2 size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleCancelByBarber(a.id)}
-                                  className="text-zinc-500 hover:text-red-400 p-1.5 transition-colors"
-                                >
-                                  <XCircle size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleNoShow(a.id)}
-                                  title="Registrar Furo"
-                                  className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-orange-500 hover:text-zinc-950 transition-all whitespace-nowrap"
-                                >
-                                  Faltou
-                                </button>
-                              </div>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => toggleMenu(e, a.id)}
+                              title="Ações do agendamento"
+                              className="text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 p-2 rounded-xl transition-colors"
+                            >
+                              <MoreVertical size={18} />
+                            </button>
+                            {menuOpenId === a.id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setMenuOpenId(null)}
+                                />
+                                <div className={`absolute right-0 z-50 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl py-1.5 min-w-[150px] animate-in fade-in zoom-in-95 duration-150 ${menuUp ? "bottom-full mb-1" : "top-full mt-1"}`}>
+                                  {!isBlock &&
+                                    !isCanceled &&
+                                    !isNoShow &&
+                                    !autoCompleted && (
+                                      <>
+                                        <button
+                                          onClick={() => {
+                                            setMenuOpenId(null);
+                                            openEditModal(a);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
+                                        >
+                                          <Edit2 size={14} /> Editar
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setMenuOpenId(null);
+                                            handleCancelByBarber(a.id);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+                                        >
+                                          <XCircle size={14} />
+                                           Cancelar
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setMenuOpenId(null);
+                                            handleNoShow(a.id);
+                                          }}
+                                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
+                                        >
+                                          <XCircle size={14} /> Faltou
+                                        </button>
+                                      </>
+                                    )}
+                                  {autoCompleted && !isNoShow && (
+                                    <button
+                                      onClick={() => {
+                                        setMenuOpenId(null);
+                                        handleNoShow(a.id);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-orange-400 hover:bg-zinc-800 transition-colors"
+                                    >
+                                      <XCircle size={14} /> Foi erro? Registrar
+                                      Furo
+                                    </button>
+                                  )}
+                                  {isBlock && !isCanceled && !isNoShow && (
+                                    <button
+                                      onClick={() => {
+                                        setMenuOpenId(null);
+                                        deleteAppointment(
+                                          a.isGroupedBlock
+                                            ? a.blockIds
+                                            : a.id,
+                                        );
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:text-red-400 hover:bg-zinc-800 transition-colors"
+                                    >
+                                      <Trash2 size={14} /> Excluir Bloqueio
+                                    </button>
+                                  )}
+                                </div>
+                              </>
                             )}
-                          {autoCompleted && !isNoShow && (
-                            <button
-                              onClick={() => handleNoShow(a.id)}
-                              title="Foi erro? Registrar Furo"
-                              className="text-zinc-600 hover:text-orange-500 p-2"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                          )}
-                          {isBlock && !isCanceled && !isNoShow && (
-                            <button
-                              onClick={() =>
-                                deleteAppointment(
-                                  a.isGroupedBlock ? a.blockIds : a.id,
-                                )
-                              }
-                              className="text-zinc-600 hover:text-red-400 p-2"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     );

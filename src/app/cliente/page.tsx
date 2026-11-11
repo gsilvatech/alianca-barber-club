@@ -788,13 +788,13 @@ export default function ClientePage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white pb-28">
-      <header className="bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 px-4 py-4 sticky top-0 z-40">
+      <header className="bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 px-4 py-6 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="w-16" />
           <img
-            src="/logo.png"
+            src="/logo aliança1.png"
             alt="Aliança Barber Club"
-            className="h-12 w-auto mx-auto mix-blend-lighten"
+            className="absolute left-1/2 -translate-x-1/2 -translate-y-1 h-24 w-auto mix-blend-lighten pointer-events-none"
           />
           <button
             onClick={handleLogout}
