@@ -35,6 +35,9 @@ import {
   Loader2,
   Lock,
   ShieldCheck,
+  MessageCircle,
+  Phone,
+  X,
 } from "lucide-react";
 
 // --- HELPER DE DATA LOCAL (CORRIGE O FUSO HORÁRIO DO BRASIL) ---
@@ -505,6 +508,15 @@ export default function BarbeiroPage() {
   const [absorbTodayCut, setAbsorbTodayCut] = useState(false);
   const [appointmentToAbsorb, setAppointmentToAbsorb] = useState("");
   const [isSavingGhost, setIsSavingGhost] = useState(false);
+
+  // Modal de detalhes do cliente (celular) na agenda
+  const [clientDetail, setClientDetail] = useState<{
+    name: string;
+    phone: string | null;
+    service: string;
+    date: string;
+    time: string;
+  } | null>(null);
 
   // Editar Plano
   const [isEditPlanModalOpen, setIsEditPlanModalOpen] = useState(false);
@@ -1391,6 +1403,16 @@ export default function BarbeiroPage() {
     return a.service;
   }
 
+  function openClientDetail(a: Appointment) {
+    setClientDetail({
+      name: renderCustomerName(a),
+      phone: a.profiles?.phone ?? null,
+      service: renderServiceDescription(a),
+      date: a.date,
+      time: a.time,
+    });
+  }
+
   const activeClientPlan =
     manualClientId !== "AVULSO"
       ? clientPlans.find(
@@ -1591,9 +1613,17 @@ export default function BarbeiroPage() {
                             <div
                               className={`font-bold italic flex items-center gap-2 ${isBlock ? "text-red-400" : autoCompleted ? "text-emerald-400" : "text-zinc-100"}`}
                             >
-                              {isBlock
-                                ? "HORÁRIO BLOQUEADO"
-                                : renderCustomerName(a)}
+                              {isBlock ? (
+                                "HORÁRIO BLOQUEADO"
+                              ) : (
+                                <button
+                                  onClick={() => openClientDetail(a)}
+                                  title="Ver celular do cliente"
+                                  className="text-left hover:text-amber-400 transition-colors underline decoration-zinc-700 underline-offset-4 cursor-pointer"
+                                >
+                                  {renderCustomerName(a)}
+                                </button>
+                              )}
                               {autoCompleted && (
                                 <CheckCircle2
                                   size={14}
@@ -1739,9 +1769,17 @@ export default function BarbeiroPage() {
                             <div
                               className={`font-bold text-sm italic ${isBlock ? "text-red-400" : "text-zinc-100"}`}
                             >
-                              {isBlock
-                                ? "HORÁRIO BLOQUEADO"
-                                : renderCustomerName(a)}
+                              {isBlock ? (
+                                "HORÁRIO BLOQUEADO"
+                              ) : (
+                                <button
+                                  onClick={() => openClientDetail(a)}
+                                  title="Ver celular do cliente"
+                                  className="text-left hover:text-amber-400 transition-colors underline decoration-zinc-700 underline-offset-4 cursor-pointer"
+                                >
+                                  {renderCustomerName(a)}
+                                </button>
+                              )}
                             </div>
                             <div className="text-zinc-500 text-xs mt-0.5">
                               {isBlock
@@ -4012,6 +4050,88 @@ export default function BarbeiroPage() {
                 setShowResetModal(false);
                 setSelectedUserForReset(null);
               }}
+              className="text-zinc-500 hover:text-white text-xs font-bold pt-3 border-t border-zinc-800/60 mt-1"
+            >
+              Fechar Janela
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DETALHES DO CLIENTE (CELULAR) */}
+      {clientDetail && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setClientDetail(null)}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 w-full max-w-sm flex flex-col gap-5 shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block mb-0.5">
+                  Contato do Cliente
+                </span>
+                <h3 className="font-bold italic text-lg text-white">
+                  {clientDetail.name}
+                </h3>
+                <p className="text-zinc-500 text-xs mt-1">
+                  {clientDetail.service} ·{" "}
+                  {clientDetail.date
+                    .split("-")
+                    .reverse()
+                    .join("/")}{" "}
+                  às {clientDetail.time}
+                </p>
+              </div>
+              <button
+                onClick={() => setClientDetail(null)}
+                className="text-zinc-500 hover:text-white transition-colors p-1"
+                aria-label="Fechar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {clientDetail.phone ? (
+              <>
+                <div className="bg-zinc-950/50 border border-zinc-800/60 rounded-xl px-4 py-3 font-mono font-bold text-amber-400 text-lg tracking-widest text-center">
+                  {clientDetail.phone}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={`https://api.whatsapp.com/send?phone=55${clientDetail.phone.replace(/\D/g, "")}&text=${encodeURIComponent(
+                      `Olá ${clientDetail.name.split(" ")[0]}! Passando para confirmar o seu horário de ${clientDetail.service} no dia ${clientDetail.date.split("-").reverse().join("/")} às ${clientDetail.time}. Valeu!`,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-emerald-500 text-zinc-950 font-black py-3.5 rounded-xl text-center text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={16} strokeWidth={2.5} /> Chamar no
+                    WhatsApp
+                  </a>
+                  <a
+                    href={`tel:${clientDetail.phone.replace(/\D/g, "")}`}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white font-bold py-3.5 rounded-xl text-center text-xs uppercase tracking-wider hover:border-amber-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Phone size={16} strokeWidth={2.5} /> Ligar
+                  </a>
+                </div>
+              </>
+            ) : (
+              <div className="bg-zinc-950/50 border border-zinc-800/60 rounded-xl px-4 py-4 text-center">
+                <p className="text-zinc-400 text-sm font-bold italic">
+                  Celular não cadastrado
+                </p>
+                <p className="text-zinc-600 text-xs mt-1">
+                  Este cliente agendou sem deixar um número de contato.
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setClientDetail(null)}
               className="text-zinc-500 hover:text-white text-xs font-bold pt-3 border-t border-zinc-800/60 mt-1"
             >
               Fechar Janela
