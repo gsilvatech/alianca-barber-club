@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import DailyWord from "@/components/DailyWord";
+import NotificationSettings from "@/components/NotificationSettings";
 import { HOURS } from "@/lib/constant";
 import {
   Home as HomeIcon,
@@ -351,7 +352,7 @@ export default function ClientePage() {
 
       const durationApplied = getServiceDuration(finalServiceTag, servicesList);
 
-      const { error } = await supabase.from("appointments").insert({
+      const { data: createdAppointment, error } = await supabase.from("appointments").insert({
         client_id: user!.id,
         barber_id: barberId,
         service: finalServiceTag,
@@ -361,9 +362,16 @@ export default function ClientePage() {
         price_applied: appliedPrice,
         duration_applied: durationApplied,
         client_plan_id: bookingViaPlan ? activePlan.id : null,
-      });
+      }).select("id").single();
 
       if (!error) {
+        if (createdAppointment?.id) {
+          fetch("/api/push/appointment-created", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ appointmentId: createdAppointment.id }),
+          }).catch((notificationError) => console.error("Erro ao avisar o barbeiro:", notificationError));
+        }
         if (bookingViaPlan && activePlan) {
           const { error: planError } = await supabase
             .from("client_plans")
@@ -1338,6 +1346,7 @@ export default function ClientePage() {
                 </div>
               )}
             </div>
+
           </div>
         )}
 
@@ -1543,6 +1552,7 @@ export default function ClientePage() {
                 </div>
               )}
             </div>
+            <NotificationSettings isClient />
           </div>
         )}
       </div>
