@@ -5,11 +5,11 @@ import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Aliança Barber Club",
   description: "Seu clube de agendamento e gestão premium",
 
-  manifest: "/manifest.json",
+  manifest: "/manifest-v2.json",
 
   appleWebApp: {
     capable: true,
@@ -18,7 +18,11 @@ export const metadata = {
   },
 
   icons: {
-    apple: "/icons/apple-touch-icon.png",
+    icon: [
+      { url: "/icons/android-chrome-192x192-v2.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/android-chrome-512x512-v2.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/apple-touch-icon-v2.png",
   },
 };
 
