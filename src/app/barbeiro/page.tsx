@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import DailyWord from "@/components/DailyWord";
+import NotificationSettings from "@/components/NotificationSettings";
 import { HOURS } from "@/lib/constant";
 import {
   Home,
@@ -1587,6 +1588,7 @@ export default function BarbeiroPage() {
               </p>
             </div>
             <DailyWord />
+            <NotificationSettings isClient={false} />
             <section>
               <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-4">
                 Agenda de Hoje
