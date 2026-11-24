@@ -2,6 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // Chamada pelo agendador externo (sem sessão de usuário). A própria rota
+  // valida o header Authorization com o CRON_SECRET.
+  if (request.nextUrl.pathname === "/api/push/reminders") {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });

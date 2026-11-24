@@ -11,7 +11,22 @@ O projeto envia avisos para o navegador instalado como aplicativo. No iPhone, o 
    - `VAPID_SUBJECT` com um e-mail real de contato da barbearia, no formato `mailto:email@dominio.com`
    - `CRON_SECRET`
    - as três variáveis já existentes do Supabase.
-3. Faça o deploy. O arquivo `vercel.json` chama `/api/push/reminders` a cada minuto. Esse intervalo exige um plano Vercel que aceite cron de um minuto; caso o plano atual não aceite, configure outro agendador para fazer uma requisição `GET` para essa rota com o cabeçalho `Authorization: Bearer <CRON_SECRET>` a cada minuto.
+3. Faça o deploy. O projeto **não** usa Vercel Cron, porque o plano Hobby só aceita execuções diárias. Os lembretes são disparados por um agendador externo (cron-job.org), configurado abaixo.
+
+## Agendador de lembretes (cron-job.org)
+
+1. Crie uma conta gratuita em [cron-job.org](https://cron-job.org) e clique em **Create cronjob**.
+2. Preencha:
+   - **Title:** `Barbearia - lembretes push`
+   - **URL:** `https://<seu-dominio>/api/push/reminders`
+   - **Execution schedule:** a cada 1 minuto (no máximo 5 minutos; a rota só envia lembretes até 10 minutos após o horário previsto).
+3. Na aba **Advanced**:
+   - **Request method:** `GET`
+   - **Headers:** adicione `Authorization` com o valor `Bearer <CRON_SECRET>` (o mesmo valor da variável de ambiente configurada na Vercel).
+4. Em **Notifications**, ative o aviso por e-mail para execuções com falha.
+5. Salve e use **Test run**. A resposta esperada é `200` com `{"sent":0}` (ou o número de lembretes enviados). `401` indica `CRON_SECRET` ou header incorreto.
+
+Se o projeto migrar para o plano Pro da Vercel, é possível desativar o job externo e voltar a usar um `vercel.json` com `crons`.
 
 ## Comportamento
 
