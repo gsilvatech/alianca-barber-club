@@ -240,6 +240,19 @@ export default function ClientePage() {
     if (!error) {
       setAppointments((prev) => prev.filter((a) => a.id !== cancelConfirm.id));
 
+      try {
+        const notificationResponse = await fetch("/api/push/appointment-canceled", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ appointmentId: cancelConfirm.id }),
+        });
+        if (!notificationResponse.ok) {
+          console.error("Erro ao avisar o barbeiro sobre o cancelamento.");
+        }
+      } catch (notificationError) {
+        console.error("Erro ao avisar o barbeiro sobre o cancelamento:", notificationError);
+      }
+
       if (cancelConfirm.client_plan_id) {
         const { data: pData } = await supabase
           .from("client_plans")
